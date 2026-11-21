@@ -1,0 +1,104 @@
+classDiagram
+    direction LR
+    class Tecnico {
+        -int _id_tecnico
+        -str _nome_tecnico
+        -str _setor
+        +de_linha(linha) Tecnico
+    }
+    class Equipamento {
+        -int _id_equipamento
+        -str _codigo_tag
+        -str _nome_equipamento
+        -str _fabricante
+        -str _modelo
+        +de_linha(linha) Equipamento
+    }
+    class Medicao {
+        -int _id_medicao
+        -int _id_equipamento
+        -int _id_tecnico
+        -str _setor_solicitante
+        -str _codigo_mmc
+        -str _parametro_medido
+        -float _valor_nominal
+        -float _tolerancia_min
+        -float _tolerancia_max
+        -float _medida_1
+        -float _medida_2
+        -str _data_medicao
+        +valor_obtido float
+        +erro float
+        +desvio float
+        +faixa tuple
+        +status_resultado str
+        +esta_aprovada() bool
+        +registrar_persistencia(id, data)
+        +de_linha(linha) Medicao
+    }
+    class ConexaoSQLite {
+        -Connection _cx
+        -int _nivel
+        +conectar() ConexaoSQLite
+        +fechar()
+        +transacao()
+        +executar(sql, parametros) Cursor
+        +consultar(sql, parametros) list
+        +criar_esquema(caminho_ddl)
+    }
+    class LogAtualizacoes {
+        -list _registros
+        +registrar(entidade, id, campo, antes, depois)
+        +linhas() list
+    }
+    class _DAOBase {
+        #ConexaoSQLite _con
+        #LogAtualizacoes _log
+        #_exigir_afetado(cursor, entidade, id)
+    }
+    class TecnicoDAO {
+        +inserir(tecnico) Tecnico
+        +buscar_por_id(id) Tecnico
+        +buscar_por_nome(nome) Tecnico
+        +listar() list
+        +atualizar(tecnico)
+        +atualizar_setor(id, setor) bool
+        +excluir(id)
+    }
+    class EquipamentoDAO {
+        +inserir(equipamento) Equipamento
+        +buscar_por_id(id) Equipamento
+        +buscar_por_tag(tag) Equipamento
+        +listar() list
+        +atualizar(equipamento)
+        +excluir(id)
+    }
+    class MedicaoDAO {
+        +inserir(medicao) Medicao
+        +buscar_por_id(id) Medicao
+        +listar() list
+        +listar_por_equipamento(id) list
+        +relatorio_calibracao(tag) list
+        +listar_reprovadas() list
+        +parecer_instrumento(tag) str
+        +resumo_por_equipamento() list
+    }
+    class ErroSistema
+    class ErroValidacao
+    class ErroBancoDados
+    class ErroIntegridade
+    class RegistroNaoEncontrado
+    _DAOBase <|-- TecnicoDAO
+    _DAOBase <|-- EquipamentoDAO
+    _DAOBase <|-- MedicaoDAO
+    _DAOBase o-- ConexaoSQLite : usa
+    _DAOBase o-- LogAtualizacoes : registra UPDATE
+    TecnicoDAO ..> Tecnico : persiste
+    EquipamentoDAO ..> Equipamento : persiste
+    MedicaoDAO ..> Medicao : persiste
+    Medicao "*" --> "1" Tecnico : id_tecnico
+    Medicao "*" --> "1" Equipamento : id_equipamento
+    ErroSistema <|-- ErroValidacao
+    ErroSistema <|-- ErroBancoDados
+    ErroBancoDados <|-- ErroIntegridade
+    ErroBancoDados <|-- RegistroNaoEncontrado
